@@ -1,0 +1,430 @@
+ USE hrcompany;
+
+-- 1. Pasirinkite visus darbuotojus: parašykite SQL užklausą, kuri gautų visus darbuotojų įrašus iš Employees lentelės.
+SELECT *
+FROM employees;
+
+-- 2. Pasirinkite tam tikrus stulpelius: parodykite visus vardus ir pavardes iš Employees lentelės.
+SELECT 
+	FirstName,
+    LastName
+FROM employees;
+
+-- 3. Filtruokite pagal skyrius: gaukite darbuotojų sąrašą, kurie dirba HR skyriuje (department lentelė).
+SELECT 
+	FirstName,
+    LastName,
+    DepartmentName
+FROM employees as e
+LEFT JOIN departments as d
+	ON d.DepartmentID = e.DepartmentID
+WHERE DepartmentName = 'HR';
+
+-- 4. Surikiuokite darbuotojus: gaukite darbuotojų sąrašą, surikiuotą pagal jų įdarbinimo datą didėjimo tvarka.
+SELECT *
+FROM employees
+ORDER BY HireDate;
+
+-- 5. Suskaičiuokite darbuotojus: raskite kiek iš viso įmonėje dirba darbuotojų.
+SELECT count(*)
+FROM employees;
+
+-- 6. Sujunkite darbuotojus su skyriais: išveskite bendrą darbuotojų sąrašą, šalia kiekvieno darbuotojo nurodant skyrių kuriame dirba.
+SELECT *
+FROM employees as e
+LEFT JOIN departments as d
+	ON d.DepartmentID = e.DepartmentID;
+
+-- 7. Apskaičiuokite vidutinį atlyginimą: suraskite koks yra vidutinis atlyginimas įmonėje tarp visų darbuotojų.
+SELECT ROUND(AVG(SalaryAmount)) as Average_Salary
+FROM salaries;
+
+-- 8. Išfiltruokite ir suskaičiuokite: raskite kiek darbuotojų dirba IT skyriuje.
+SELECT COUNT(DepartmentName) as Empl_No_in_IT
+FROM employees as e
+LEFT JOIN departments as d
+	ON d.DepartmentID = e.DepartmentID
+WHERE DepartmentName = 'IT';
+
+-- 9. Išrinkite unikalias reikšmes: gaukite unikalių siūlomų darbo pozicijų sąrašą iš jobpositions lentelės.
+SELECT PositionTitle as Unique_positions
+FROM  jobpositions
+GROUP BY PositionTitle;
+
+-- 10. Išrinkite pagal datos rėžį: gaukite darbuotojus, kurie buvo nusamdyti tarp 2020-02-01 ir 2020-11-01.
+SELECT *
+FROM employees
+WHERE HireDate > '2020-02-01' AND HireDate < '2020-11-01';
+
+-- 11. Darbuotojų amžius: gaukite kiekvieno darbuotojo amžių pagal tai kada jie yra gimę. 
+SELECT 
+	*,
+	FLOOR((DATEDIFF(CURRENT_DATE, DateOfBirth)) / 365.25) as Age -- 365.25 paaimta, kaip average days in a year
+FROM employees;
+
+-- 12. Darbuotojų el. pašto adresų sąrašas: gaukite visų darbuotojų el. pašto adresų sąrašą abėcėline tvarka.
+SELECT *
+FROM employees
+ORDER BY Email;
+
+-- 13. Darbuotojų skaičius pagal skyrių: suraskite kiek kiekviename skyriuje dirba darbuotojų.
+SELECT 
+	DepartmentName,
+	COUNT(e.DepartmentID) as No_of_Employees
+FROM employees as e
+LEFT JOIN departments as d
+	ON d.DepartmentID = e.DepartmentID
+GROUP BY DepartmentName;
+
+-- 14. Darbštus darbuotojas: išrinkite visus darbuotojus, kurie turi daugiau nei 3 įgūdžius (skills).
+SELECT 
+	FirstName,
+    LastName,
+    COUNT(SkillID) as Skill_Count
+FROM employees as e
+LEFT JOIN employeeskills as es
+	ON e.EmployeeID = es.EmployeeID
+GROUP BY FirstName, LastName
+HAVING Skill_Count > 3; 
+
+-- 15. Vidutinė papildomos naudos kaina: apskaičiuokite vidutines papildomų naudų išmokų (benefits lentelė) išlaidas darbuotojams.
+SELECT ROUND(AVG(Cost),1) as Avg_Cost_of_Benefits
+FROM benefits;
+
+-- 16. Jaunausias ir vyriausias darbuotojai: suraskite jaunausią ir vyriausią darbuotoją įmonėje. 
+SELECT 
+ FirstName,
+ LastName,
+ DateOfBirth
+FROM employees
+WHERE DateOfBirth = (SELECT MAX(DateOfBirth) from employees)
+UNION ALL
+SELECT 
+ FirstName,
+ LastName,
+ DateOfBirth
+FROM employees
+WHERE DateOfBirth = (SELECT MIN(DateOfBirth) from employees);
+
+
+-- 17. Skyrius su daugiausiai darbuotojų: suraskite kuriame skyriuje dirba daugiausiai darbuotojų.
+SELECT 
+	DepartmentName,
+	No_of_Employees
+FROM
+	(SELECT 
+		DepartmentName,
+		COUNT(e.DepartmentID) as No_of_Employees
+	FROM employees as e
+		LEFT JOIN departments as d
+			ON d.DepartmentID = e.DepartmentID
+	GROUP BY DepartmentName) as MAX_EMPLOYEES
+LIMIT 1
+;
+
+SELECT 
+	*
+FROM employees as e
+	LEFT JOIN departments as d
+		ON d.DepartmentID = e.DepartmentID;
+
+
+-- 18. Tekstinė paieška: suraskite visus darbuotojus su žodžiu “excellent” jų darbo atsiliepime (performancereviews lentelė).
+SELECT *
+FROM employees as e
+	LEFT JOIN performancereviews as p
+		ON e.EmployeeID = p.EmployeeID
+WHERE ReviewText LIKE '%excellent%';
+
+-- 19. Darbuotojų telefono numeriai: išveskite visų darbuotojų ID su jų telefono numeriais.
+SELECT 
+	EmployeeID,
+    Phone
+FROM employees;
+
+-- 20. Darbuotojų samdymo mėnesis: suraskite kurį mėnesį buvo nusamdyta daugiausiai darbuotojų.
+SELECT 
+	MONTH(HireDate) as Month_of_MAX_Employment,
+	COUNT(EmployeeID) as How_many_employees
+FROM employees
+GROUP BY Month_of_MAX_Employment
+ORDER BY How_many_employees DESC
+LIMIT 1
+;
+
+-- 21. Darbuotojų įgūdžiai: išveskite visus darbuotojus, kurie turi įgūdį “Communication”.
+SELECT *
+FROM employees
+	LEFT JOIN employeeskills
+		ON employees.EmployeeID = employeeskills.EmployeeID
+	LEFT JOIN skills
+        ON employeeskills.SkillID = skills.SkillID
+WHERE SkillName = 'Communication';
+
+-- 22. Sub-užklausos: suraskite kuris darbuotojas įmonėje uždirba daugiausiai ir išveskite visą jo informaciją.
+SELECT *
+FROM (
+	SELECT  
+			*,  
+			ROW_NUMBER() OVER (PARTITION BY employeeID ORDER BY salaryamount DESC) AS eil_nr
+		FROM salaries
+	) as s
+	LEFT JOIN employees as e
+		ON e.EmployeeID = s.EmployeeID
+WHERE eil_nr = 1
+ORDER BY salaryamount DESC
+LIMIT 1
+;
+
+
+
+-- 23. Grupavimas ir agregacija: apskaičiuokite visas įmonės išmokų (benefits lentelė) išlaidas.
+SELECT sum(Cost) as Visa_islaidu_suma
+FROM benefits;
+
+-- 24. Įrašų atnaujinimas: atnaujinkite telefono numerį darbuotojo, kurio id yra 1.
+UPDATE employees
+SET Phone = 123456789
+WHERE (`EmployeeID` = '1');
+
+-- 25. Atostogų užklausos: išveskite sąrašą atostogų prašymų (leaverequests), kurie laukia patvirtinimo.
+SELECT *
+FROM leaverequests
+WHERE status = 'Pending';
+
+-- 26. Darbo atsiliepimas: išveskite darbuotojus, kurie darbo atsiliepime yra gavę 5 balus.
+SELECT *
+FROM employees as e
+	LEFT JOIN performancereviews as p
+		ON e.EmployeeID = p.EmployeeID
+WHERE rating = 5;
+
+-- 27. Papildomų naudų registracijos: išveskite visus darbuotojus, kurie yra užsiregistravę į “Health Insurance” papildomą naudą (benefits lentelė).
+SELECT *
+FROM employees
+	LEFT JOIN employeebenefits
+		ON employees.EmployeeID = employeebenefits.EmployeeID
+        LEFT JOIN benefits
+			ON employeebenefits.BenefitID = benefits.BenefitID
+WHERE BenefitName = 'Health Insurance';
+
+-- 28. Atlyginimų pakėlimas: parodykite kaip atrodytų atlyginimai darbuotojų, dirbančių “Finance” skyriuje, jeigu jų atlyginimus pakeltume 10 %. 
+SELECT 
+	FirstName,
+    LastName,
+    SalaryAmount+(SalaryAmount * 0.1) as Pakeltas_atlyginimas
+	FROM ( 
+		SELECT  
+			*,  
+			ROW_NUMBER() OVER (PARTITION BY employeeID ORDER BY salaryenddate DESC) AS eil_nr
+		FROM salaries
+	) AS s 
+	LEFT JOIN employees as e 
+			ON e.EmployeeID = s.EmployeeID
+		LEFT JOIN departments as d
+			ON d.DepartmentID = e.DepartmentID 
+WHERE eil_nr = 1 AND DepartmentName = 'Finance'; 
+
+
+-- 29. Efektyviausi darbuotojai: raskite 5 darbuotojus, kurie turi didžiausią darbo vertinimo (performance lentelė) reitingą.        
+SELECT 
+	FirstName,
+    LastName,
+    AVG(Rating) as Rating_average
+FROM performancereviews as p
+	LEFT JOIN employees as e
+		ON e.employeeID = p.EmployeeID
+GROUP BY FirstName, LastName
+ORDER BY Rating_average DESC
+LIMIT 5;
+
+-- 30. Atostogų užklausų istorija: gaukite visą atostogų užklausų istoriją (leaverequests lentelė) darbuotojo, kurio id yra 1.
+SELECT *
+FROM employees as e
+	LEFT JOIN leaverequests as l
+		ON e.employeeID = l.EmployeeID
+WHERE e.employeeID = 1;
+
+-- 31. Atlyginimų diapozono analizė: nustatykite atlyginimo diapazoną (minimalų ir maksimalų) kiekvienai darbo pozicijai.
+SELECT 
+	MIN(SalaryAmount) as Minimum_salary,
+	MAX(SalaryAmount) as Maximum_salary,
+    DepartmentName
+FROM employees as e
+	LEFT JOIN salaries as s
+		ON e.EmployeeID = s.EmployeeID
+        LEFT JOIN departments as d
+        ON e.departmentID = d.departmentID
+GROUP BY DepartmentName        
+;
+
+-- 32. Darbo atsiliepimo istorija: gaukite visą istoriją apie darbo atsiliepimus (performancereviews lentelė), darbuotojo, kurio id yra 2.
+SELECT *
+FROM employees as e
+	LEFT JOIN performancereviews as p
+		ON e.employeeID = p.EmployeeID
+WHERE e.employeeID = 2;
+
+-- 33. Papildomos naudos kaina vienam darbuotojui: apskaičiuokite bendras papildomų naudų išmokų išlaidas vienam darbuotojui (benefits lentelė).
+SELECT 
+	ROUND(SUM(Cost) / (SELECT count(EmployeeID) FROM employees),2) as Average_Benefit_Cost
+FROM employees as e
+	LEFT JOIN employeebenefits as eb
+		ON e.employeeID = eb.EmployeeID
+        LEFT JOIN benefits as b
+			ON eb.BenefitID = b.BenefitID
+;
+
+-- 34. Geriausi įgūdžiai pagal skyrių: išvardykite dažniausiai pasitaikančius įgūdžius kiekviename skyriuje.
+
+WITH SkillCounts AS (
+    SELECT 
+        d.DepartmentName,
+        s.SkillName,
+        COUNT(s.SkillName) AS Dazniausi_igudziai
+    FROM employeeskills AS es
+		LEFT JOIN employees AS e
+			ON e.employeeID = es.EmployeeID
+			LEFT JOIN departments AS d
+				ON e.DepartmentID = d.DepartmentID
+				LEFT JOIN skills AS s
+					ON es.SkillID = s.SkillID
+    GROUP BY d.DepartmentName, s.SkillName
+),
+RankedSkills AS (
+    SELECT 
+        DepartmentName,
+        SkillName,
+        Dazniausi_igudziai,
+        ROW_NUMBER() OVER (PARTITION BY DepartmentName ORDER BY Dazniausi_igudziai DESC) AS eil_nr
+    FROM SkillCounts
+)
+SELECT 
+    DepartmentName,
+    SkillName,
+    Dazniausi_igudziai
+FROM RankedSkills
+WHERE eil_nr = 1
+;
+
+
+-- 35. Atlyginimo augimas: apskaičiuokite procentinį atlyginimo padidėjimą kiekvienam darbuotojui, lyginant su praėjusiais metais. 
+WITH newest_salary as 
+(SELECT 
+	e.EmployeeID,
+	FirstName,
+    LastName,
+    SalaryAmount,
+    SalaryStartDate
+FROM employees as e
+	LEFT JOIN salaries as s
+		ON e.EmployeeID = s.EmployeeID
+WHERE YEAR(s.SalaryStartDate) = 2023),
+last_year_salary as
+(SELECT 
+	e.EmployeeID,
+    SalaryAmount,
+    SalaryStartDate
+FROM employees as e
+	LEFT JOIN salaries as s
+		ON e.EmployeeID = s.EmployeeID
+WHERE YEAR(s.SalaryStartDate) = 2022)
+SELECT
+	newest_salary.EmployeeID,
+	FirstName,
+    LastName,
+    round((newest_salary.SalaryAmount - last_year_salary.SalaryAmount) / last_year_salary.SalaryAmount *100) as salary_increase_percent
+FROM newest_salary
+	LEFT JOIN last_year_salary
+		ON newest_salary.EmployeeID = last_year_salary.EmployeeID
+;
+
+-- 36. Darbuotojų išlaikymas: raskite darbuotojus, kurie įmonėje dirba daugiau nei 5 metai ir kuriems per tą laiką nebuvo pakeltas atlyginimas.
+WITH newest_salary as 
+(SELECT 
+	e.EmployeeID,
+	FirstName,
+    LastName,
+    SalaryAmount,
+    SalaryStartDate,
+    HireDate
+FROM employees as e
+	LEFT JOIN salaries as s
+		ON e.EmployeeID = s.EmployeeID
+WHERE YEAR(s.SalaryStartDate) = 2023),
+last_year_salary as
+(SELECT 
+	e.EmployeeID,
+    SalaryAmount,
+    SalaryStartDate
+FROM employees as e
+	LEFT JOIN salaries as s
+		ON e.EmployeeID = s.EmployeeID
+WHERE YEAR(s.SalaryStartDate) = 2022)
+SELECT
+	newest_salary.EmployeeID,
+	FirstName,
+    LastName,
+    round((newest_salary.SalaryAmount - last_year_salary.SalaryAmount) / last_year_salary.SalaryAmount *100) as salary_increase_percent,
+    HireDate
+FROM newest_salary
+	LEFT JOIN last_year_salary
+		ON newest_salary.EmployeeID = last_year_salary.EmployeeID
+WHERE round((newest_salary.SalaryAmount - last_year_salary.SalaryAmount) / last_year_salary.SalaryAmount *100) = 0 AND TIMESTAMPDIFF(YEAR, HireDate, CURDATE()) > 5
+;
+
+-- 37. Darbuotojų atlyginimų analizė: suraskite kiekvieno darbuotojo atlygį (atlyginimas (salaries lentelė) + išmokos už papildomas naudas (benefits lentelė)) ir surikiuokite darbuotojus pagal bendrą atlyginimą mažėjimo tvarka.
+SELECT 
+	FirstName,
+    LastName,
+    sum(SalaryAmount + cost) as bendras_atlyginimas
+FROM employees as e
+	LEFT JOIN salaries as s
+		ON e.EmployeeID = s.EmployeeID
+        LEFT JOIN employeebenefits as eb
+			ON e.EmployeeID = eb.EmployeeID
+				LEFT JOIN benefits as b
+					ON eb.BenefitID = b.BenefitID
+GROUP BY FirstName, LastName
+ORDER BY bendras_atlyginimas desc;
+
+-- 38. Darbuotojų darbo atsiliepimų tendencijos: išveskite kiekvieno darbuotojo vardą ir pavardę, nurodant ar jo darbo atsiliepimas (performancereviews lentelė) pagerėjo ar sumažėjo.
+WITH sorted_rating as
+(
+SELECT 
+	e.EmployeeID,
+    FirstName,
+    LastName,
+    ReviewDate,
+    Rating,
+    ROW_NUMBER() OVER (PARTITION BY e.EmployeeID ORDER BY ReviewDate DESC) AS eil_nr
+FROM employees as e
+	LEFT JOIN performancereviews as p
+		ON e.EmployeeID = p.EmployeeID
+),
+last_rating as
+(
+SELECT
+	EmployeeID,
+    FirstName,
+    LastName,
+    Rating as last_rating
+FROM sorted_rating
+WHERE eil_nr = 2
+),
+new_rating as
+(SELECT
+	EmployeeID,
+    Rating as new_rating
+FROM sorted_rating
+WHERE eil_nr = 1
+)
+SELECT 
+	FirstName,
+    LastName,
+    if(new_rating > last_rating, 'Padidėjo', if(new_rating < last_rating, 'Sumažėjo', 'Nepakito') ) as Rating_pokytis        
+FROM last_rating
+	INNER JOIN new_rating
+		ON last_rating.EmployeeID = new_rating.EmployeeID
+;
+
